@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Steam Launch Options</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Arial", sans-serif;
+            background: #1b2838;
+            color: #fff;
+            line-height: 1.4;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* Game background (simulated) */
+        .game-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080"><rect width="100%" height="100%" fill="%23171a21"/><circle cx="200" cy="300" r="150" fill="%23222a33" opacity="0.4"/><circle cx="1700" cy="800" r="200" fill="%23222a33" opacity="0.4"/></svg>') center/cover;
+            z-index: -1;
+        }
+
+        /* Main container – the modal */
+        .launch-dialog {
+            width: 720px;
+            max-width: 90%;
+            background: #1b2838;
+            border-radius: 8px;
+            box-shadow: 0 12px 36px rgba(0,0,0,0.6);
+            overflow: hidden;
+            border: 1px solid #2a2e3a;
+        }
+
+        /* Header */
+        .dialog-header {
+            background: #171a21;
+            padding: 16px 20px;
+            border-bottom: 1px solid #2a2e3a;
+        }
+        .dialog-header h2 {
+            font-size: 20px;
+            font-weight: 500;
+            color: #66c0f4;
+        }
+
+        /* Content */
+        .dialog-content {
+            padding: 20px;
+        }
+
+        /* Launch options section */
+        .launch-options {
+            margin-bottom: 24px;
+        }
+        .launch-options h3 {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 12px;
+            color: #c6d4df;
+        }
+        .option-group {
+            background: #0e141c;
+            border-radius: 4px;
+            padding: 12px;
+        }
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+        .radio-option:last-child {
+            margin-bottom: 0;
+        }
+        .radio-option input {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+        .radio-option label {
+            cursor: pointer;
+            color: #e6e6e6;
+        }
+        .option-note {
+            margin-top: 12px;
+            font-size: 12px;
+            color: #8f8f8f;
+            border-top: 1px solid #2a2e3a;
+            padding-top: 12px;
+        }
+
+        /* Privacy section */
+        .privacy-section {
+            margin-bottom: 24px;
+            border-top: 1px solid #2a2e3a;
+            padding-top: 20px;
+        }
+        .privacy-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .privacy-header h3 {
+            font-size: 16px;
+            font-weight: 500;
+            color: #66c0f4;
+        }
+        .opt-out-link {
+            font-size: 12px;
+            color: #66c0f4;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .data-categories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .checkbox-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .checkbox-option input {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+        .checkbox-option label {
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .consent-text {
+            font-size: 13px;
+            color: #8f8f8f;
+            margin-bottom: 12px;
+        }
+        .opt-out-message {
+            display: none;
+            font-size: 13px;
+            color: #e0a800;
+            background: #2a2e3a;
+            padding: 8px;
+            border-radius: 4px;
+            margin-top: 12px;
+        }
+
+        /* Buttons */
+        .dialog-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding: 16px 20px;
+            border-top: 1px solid #2a2e3a;
+            background: #171a21;
+        }
+        .btn {
+            padding: 8px 20px;
+            border-radius: 4px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: background 0.2s;
+        }
+        .btn-primary {
+            background: #5c9e3f;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #4c8c32;
+        }
+        .btn-secondary {
+            background: #2a2e3a;
+            color: #c6d4df;
+        }
+        .btn-secondary:hover {
+            background: #3a3e4a;
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2a2e3a;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 1000;
+            font-size: 14px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .toast.show {
+            opacity: 1;
+        }
+
+        /* Always use this option styling */
+        .always-use {
+            margin-top: 16px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #8f8f8f;
+        }
+        .always-use input {
+            width: 14px;
+            height: 14px;
+        }
+        .footer-note {
+            font-size: 11px;
+            color: #8f8f8f;
+            margin-top: 12px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-background"></div>
+
+    <div class="launch-dialog" id="launchDialog">
+        <div class="dialog-header">
+            <h2>Select Launch Configuration</h2>
+        </div>
+
+        <div class="dialog-content">
+            <!-- Launch options -->
+            <div class="launch-options">
+                <h3>Choose your launch option</h3>
+                <div class="option-group">
+                    <label class="radio-option">
+                        <input type="radio" name="launchOption" value="native" checked>
+                        <span>Play Native</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="launchOption" value="community">
+                        <span>Select Most Popular Community Compatibility</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="launchOption" value="custom">
+                        <span>Select Compatibility Options</span>
+                    </label>
+                    <div class="option-note">
+                        Some launch options may offer better performance or compatibility depending on your system.
+                    </div>
+                </div>
+                <div class="always-use">
+                    <input type="checkbox" id="alwaysUse">
+                    <label for="alwaysUse">Always use this option</label>
+                </div>
+                <div class="footer-note">
+                    You can change this later by clicking the gear icon on the game page in your library.
+                </div>
+            </div>
+
+            <!-- Data collection consent -->
+            <div class="privacy-section">
+                <div class="privacy-header">
+                    <h3>Help improve compatibility data</h3>
+                    <span class="opt-out-link" id="optOutLink">Opt out</span>
+                </div>
+                <div class="consent-text">
+                    Allow Steam to collect anonymized launch data to improve game compatibility across different hardware configurations.
+                    This helps us provide better recommendations and faster issue detection.
+                </div>
+
+                <div class="data-categories" id="dataCategories">
+                    <label class="checkbox-option">
+                        <input type="checkbox" value="device" checked>
+                        <span>Device configuration</span>
+                    </label>
+                    <label class="checkbox-option">
+                        <input type="checkbox" value="proton" checked>
+                        <span>Proton version</span>
+                    </label>
+                    <label class="checkbox-option">
+                        <input type="checkbox" value="result" checked>
+                        <span>Launch result (success/failure)</span>
+                    </label>
+                    <label class="checkbox-option">
+                        <input type="checkbox" value="command" checked>
+                        <span>Launch command</span>
+                    </label>
+                </div>
+
+                <div id="optOutMessage" class="opt-out-message">
+                    ⚠️ You have opted out of all data collection. No information will be shared. You can re‑enable it by revisiting this dialog.
+                </div>
+            </div>
+        </div>
+
+        <div class="dialog-buttons">
+            <button class="btn btn-secondary" id="cancelBtn">Cancel</button>
+            <button class="btn btn-primary" id="playBtn">Play</button>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // DOM elements
+        const dialog = document.getElementById('launchDialog');
+        const optOutLink = document.getElementById('optOutLink');
+        const dataCategories = document.getElementById('dataCategories');
+        const optOutMessage = document.getElementById('optOutMessage');
+        const playBtn = document.getElementById('playBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const toast = document.getElementById('toast');
+        const alwaysUseCheckbox = document.getElementById('alwaysUse');
+
+        let isOptedOut = false;
+
+        // Helper to show toast
+        function showToast(message, isError = false) {
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 4000);
+        }
+
+        // Handle opt-out
+        optOutLink.addEventListener('click', () => {
+            isOptedOut = !isOptedOut;
+            if (isOptedOut) {
+                // Disable all checkboxes and uncheck them
+                const checkboxes = dataCategories.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(cb => {
+                    cb.disabled = true;
+                    cb.checked = false;
+                });
+                optOutMessage.style.display = 'block';
+                optOutLink.textContent = 'Opt in';
+            } else {
+                // Re-enable and reset to default checked state
+                const checkboxes = dataCategories.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(cb => {
+                    cb.disabled = false;
+                    cb.checked = true;
+                });
+                optOutMessage.style.display = 'none';
+                optOutLink.textContent = 'Opt out';
+            }
+        });
+
+        // Simulate launch data collection
+        function collectLaunchData() {
+            const selectedLaunchOption = document.querySelector('input[name="launchOption"]:checked').value;
+            const alwaysUse = alwaysUseCheckbox.checked;
+            const consentGiven = !isOptedOut;
+
+            let collectedData = {};
+            if (consentGiven) {
+                const categories = [];
+                const checkboxes = dataCategories.querySelectorAll('input[type="checkbox"]:checked');
+                checkboxes.forEach(cb => categories.push(cb.value));
+
+                // Mock device configuration
+                const deviceConfig = {
+                    os: 'Windows 11',
+                    cpu: 'Intel Core i7-12700K',
+                    gpu: 'NVIDIA RTX 3070',
+                    ram: '32 GB',
+                    steamDeck: false,
+                };
+
+                const protonVersion = 'Experimental (GE-Proton8-27)';
+                const launchResult = 'success'; // would be determined by actual launch
+                const launchCommand = selectedLaunchOption === 'native' 
+                    ? './game --native' 
+                    : (selectedLaunchOption === 'community' 
+                        ? './game --community-compat' 
+                        : './game --custom-compat');
+
+                if (categories.includes('device')) collectedData.device = deviceConfig;
+                if (categories.includes('proton')) collectedData.proton = protonVersion;
+                if (categories.includes('result')) collectedData.result = launchResult;
+                if (categories.includes('command')) collectedData.command = launchCommand;
+            }
+
+            return { selectedLaunchOption, alwaysUse, collectedData, consentGiven };
+        }
+
+        // Simulate launching the game
+        function launchGame() {
+            const data = collectLaunchData();
+
+            // Show a summary in the toast
+            let message = `Launching with option: ${data.selectedLaunchOption}`;
+            if (data.alwaysUse) message += ' (remembered)';
+            if (data.consentGiven) {
+                const categories = Object.keys(data.collectedData).join(', ');
+                message += `\nData collected: ${categories || 'none'}`;
+                if (data.collectedData.command) message += `\nCommand: ${data.collectedData.command}`;
+            } else {
+                message += '\nNo data collected (opt-out active).';
+            }
+            showToast(message);
+
+            // In a real scenario, you'd store the preference and start the game.
+            // For demo, just log to console.
+            console.log('Launch data:', data);
+        }
+
+        // Event listeners
+        playBtn.addEventListener('click', () => {
+            launchGame();
+            // Optionally close the dialog? In a real scenario, the dialog might disappear.
+            // For demo, we keep it open and show toast.
+        });
+
+        cancelBtn.addEventListener('click', () => {
+            showToast('Launch cancelled.', false);
+        });
+    </script>
+</body>
+</html>

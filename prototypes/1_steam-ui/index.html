@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Steam</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Arial:wght@400;500;700&display=swap');
+        
+        :root {
+            --steam-dark: #171a21;
+            --steam-header: #1b2838;
+            --steam-blue: #66c0f4;
+            --steam-text: #c6d4df;
+        }
+        
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: "Arial", sans-serif;
+            background: linear-gradient(180deg, #1b2838 0%, #171a21 100%);
+            color: #fff;
+            line-height: 1.4;
+            min-height: 100vh;
+            font-size: 16px;
+            padding: 0 10%;
+            overflow-x: hidden;
+        }
+        
+        header {
+            background: #171a21;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .logo img { height: 38px; width: auto; }
+        nav a {
+            color: #c6d4df;
+            text-decoration: none;
+            margin: 0 14px;
+            font-weight: 500;
+            transition: color 0.2s;
+            font-size: 17px;
+        }
+        nav a:hover { color: #fff; }
+        
+        .valve-icon {
+            display: none;
+            width: 36px;
+            height: 36px;
+            cursor: pointer;
+            margin-left: auto;
+            transition: transform 0.3s ease;
+        }
+        .valve-icon svg {
+            width: 100%;
+            height: 100%;
+        }
+        .valve-icon.rotate {
+            transform: rotate(90deg);
+        }
+        
+        .compatibility {
+            margin-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-weight: 500;
+        }
+        .deck-verified { background: #1a9fff; }
+        .deck-playable { background: #66c0f4; color: #000; }
+        .deck-unsupported { background: #a34c25; }
+        .proton-platinum { background: #b4e1ff; color:#000; }
+        .proton-gold { background: #ffd700; color:#000; }
+        .proton-silver { background: #c0c0c0; color:#000; }
+        .proton-bronze { background: #cd7f32; }
+        .badge span { opacity: 0.9; }
+        
+        .hero {
+            width: 100vw;
+            position: relative;
+            left: 50%;
+            right: 50%;
+            margin-left: -50vw;
+            margin-right: -50vw;
+            overflow: hidden;
+        }
+
+        .hero img {
+            width: 100%;
+            height: 520px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 180px;
+            background: linear-gradient(transparent, #171a21);
+            pointer-events: none;
+        }
+        
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5%;
+            margin: 0;
+        }
+        
+        .main-content {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .secondary {
+            width: 680px;
+            flex-shrink: 0;
+            background: #1b2838;
+            border-radius: 4px;
+            padding: 20px 16px;
+            height: fit-content;
+            position: sticky;
+            top: 80px;
+            align-self: flex-start;
+        }
+        
+        @media (max-width: 3000px) {
+            .secondary {
+                width: 450px;
+            }
+        }
+        @media (max-width: 1700px) {
+            .secondary {
+                width: 320px; 
+            }
+        }
+        @media (max-width: 1400px) {
+            .secondary {
+                position: fixed;
+                top: 60px;
+                right: -100%;
+                width: 100%;
+                height: calc(100vh - 60px);
+                transition: right 0.3s ease;
+                z-index: 9990;
+                box-shadow: -4px 0 20px rgba(0,0,0,0.5);
+                overflow-y: auto;
+            }
+            .secondary.show {
+                right: 0;
+            }
+            .valve-icon {
+                display: block;
+            }
+            .main-content {
+                width: 100%;
+            }
+        }
+        
+        .featured-carousel {
+            margin-bottom: 48px;
+            position: relative;
+            
+        }
+        .carousel-wrapper {
+            display: flex;
+            gap: 24px;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            position: relative;
+        }
+        .carousel-image {
+            flex: 2;
+            position: relative;
+            overflow: visible;
+            border-radius: 4px;
+            aspect-ratio: 16 / 8;
+        }
+        .carousel-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .carousel-right {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .carousel-screenshots {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .carousel-screenshots img {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        .carousel-description {
+            background: #2a2a2a;
+            padding: 18px 24px;
+            border-radius: 4px;
+            font-size: 19px;
+            line-height: 1.4;
+        }
+        .carousel-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.75);
+            color: #fff;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            cursor: pointer;
+            z-index: 20;
+            transition: background 0.2s;
+        }
+        .carousel-arrow:hover {
+            background: rgba(0,0,0,0.9);
+        }
+        .carousel-arrow.left {
+            left: -60px;
+        }
+        .carousel-arrow.right {
+            right: -60px;
+        }
+        @media (max-width: 1200px) {
+            .carousel-arrow.left { left: 8px; }
+            .carousel-arrow.right { right: 8px; }
+        }
+        .carousel-dots {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 16px;
+        }
+        .dot {
+            width: 14px;
+            height: 14px;
+            background: #3d3d3d;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .dot.active {
+            background: #66c0f4;
+            transform: scale(1.4);
+        }
+        
+        .games-grid {
+            display: grid;
+            gap: 28px;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            justify-content: start;
+        }
+        
+        @media (max-width: 1700px) {
+            .games-grid {
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            }
+        }
+        @media (max-width: 1400px) {
+            .games-grid {
+                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            }
+        }
+        @media (max-width: 1000px) {
+            .games-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+        }
+        @media (min-width: 2800px) {
+            .games-grid {
+                grid-template-columns: repeat(5, minmax(320px, 1fr));
+            }
+        }
+        
+        .game-card {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #2a2a2a;
+            border-radius: 8px;
+            overflow: visible;
+            transition: transform 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .game-card:hover {
+            transform: scale(1.06);
+            z-index: 50;
+        }
+        .game-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .game-meta {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.7);
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            backdrop-filter: blur(4px);
+            z-index: 2;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+            gap: 8px;
+        }
+        .game-title {
+            font-weight: 600;
+            color: #c6d4df;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+        }
+        .game-price {
+            font-weight: 600;
+            color: #66c0f4;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        
+        .game-popup {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 380px;
+            background: #1b2838;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 9999;
+            padding: 0;
+            margin-top: 12px;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        .game-card:hover .game-popup {
+            opacity: 1;
+            visibility: visible;
+            top: 100%;
+        }
+        .popup-header {
+            padding: 12px;
+            background: #2a2a2a;
+        }
+        .popup-header h3 {
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+        .popup-header p {
+            font-size: 13px;
+            color: #8f8f8f;
+        }
+        .popup-image {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+        }
+        .popup-info {
+            padding: 16px;
+        }
+        .popup-reviews {
+            background: #2a2a2a;
+            padding: 8px 16px;
+            margin: 12px 0;
+            font-size: 14px;
+            color: #c6d4df;
+        }
+        .popup-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .popup-tags span {
+            background: #3d3d3d;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 13px;
+        }
+        
+        .recommended-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .rec-item {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            background: #2a2a2a;
+            padding: 8px;
+            border-radius: 6px;
+        }
+        .rec-item img {
+            width: 48px;
+            height: 48px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        
+        footer { 
+            text-align: center; 
+            padding: 60px 20px 40px; 
+            color: #8f8f8f; 
+            font-size: 14px; 
+            border-top: 1px solid #2a2a2a;
+            margin-top: 80px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <img src="../sources/logo_steam.svg" alt="STEAM">
+        </div>
+        <nav style="margin-left: auto;">
+            <a href="#">Store</a>
+            <a href="#">Community</a>
+            <a href="#">About</a>
+            <a href="#">Support</a>
+        </nav>
+        <div class="valve-icon" onclick="toggleSidebar()">
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="40" fill="#e33c2c" stroke="#a52214" stroke-width="2"/>
+                <rect x="48" y="15" width="4" height="30" fill="#c0c0c0" rx="2"/>
+                <rect x="48" y="55" width="4" height="30" fill="#c0c0c0" rx="2"/>
+                <rect x="15" y="48" width="30" height="4" fill="#c0c0c0" rx="2"/>
+                <rect x="55" y="48" width="30" height="4" fill="#c0c0c0" rx="2"/>
+                <circle cx="50" cy="50" r="12" fill="#2a2a2a"/>
+            </svg>
+        </div>
+    </header>
+
+    <div class="hero">
+        <img src="../sources/hla.jpg" alt="Half-Life: Alyx">
+    </div>
+
+    <div class="container">
+        <div class="main-content">
+            <div class="featured-carousel">
+                <div class="carousel-wrapper">
+                    <div class="carousel-image" id="carouselImageContainer">
+                        <img id="carouselMainImage" src="../sources/hla.jpg" alt="">
+                    </div>
+                    <div class="carousel-arrow left" onclick="prevCarousel()">‹</div>
+                    <div class="carousel-arrow right" onclick="nextCarousel()">›</div>
+                    <div class="carousel-right">
+                        <div class="carousel-screenshots" id="carouselScreenshots"></div>
+                        <div class="carousel-description" id="carouselDescription">
+                            <h2 id="carouselTitle">Half-Life: Alyx</h2>
+                            <p id="carouselDesc">Step into the world of Half-Life like never before. The definitive VR experience.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="carousel-dots" id="carouselDots"></div>
+            </div>
+            
+            <h2 style="margin: 32px 0 16px; color:#c6d4df;">Featured Games</h2>
+            <div class="games-grid" id="gamesGrid"></div>
+            
+            <h2 style="margin: 48px 0 16px; color:#c6d4df;">Special Offers &amp; Events</h2>
+            <div class="games-grid" id="offersGrid"></div>
+        </div>
+        
+        <div class="secondary" id="sidebar">
+            <div style="position:relative;margin-bottom:24px;">
+                <div style="width:100%;padding:12px 16px 12px 42px;background:#2a2a2a;border-radius:4px;color:#8f8f8f;font-size:15px;pointer-events:none;">
+                    Search the Steam Store...
+                </div>
+                <span style="position:absolute;left:16px;top:13px;font-size:18px;">🔎</span>
+            </div>
+            
+            <div style="margin-bottom:28px;">
+                <h4 style="color:#66c0f4;margin-bottom:10px;font-size:16px;">Categories</h4>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                    <span style="background:#2a2a2a;padding:4px 12px;border-radius:9999px;font-size:13px;">FPS</span>
+                    <span style="background:#2a2a2a;padding:4px 12px;border-radius:9999px;font-size:13px;">Adventure</span>
+                    <span style="background:#2a2a2a;padding:4px 12px;border-radius:9999px;font-size:13px;">VR</span>
+                    <span style="background:#2a2a2a;padding:4px 12px;border-radius:9999px;font-size:13px;">Classic</span>
+                    <span style="background:#2a2a2a;padding:4px 12px;border-radius:9999px;font-size:13px;">Multiplayer</span>
+                    <span style="background:#2a2a2a;padding:4px 12px;border-radius:9999px;font-size:13px;">Puzzle</span>
+                    <span style="background:#2a2a2a;padding:4px 12px;border-radius:9999px;font-size:13px;">Zombie</span>
+                </div>
+            </div>
+            
+            <div style="display:flex;background:#2a2a2a;border-radius:4px;padding:4px;margin-bottom:16px;">
+                <div onclick="switchTab(0)" class="tab active" style="flex:1;text-align:center;padding:8px;border-radius:4px;">New Releases</div>
+                <div onclick="switchTab(1)" class="tab" style="flex:1;text-align:center;padding:8px;border-radius:4px;">Top Sellers</div>
+                <div onclick="switchTab(2)" class="tab" style="flex:1;text-align:center;padding:8px;border-radius:4px;">Upcoming</div>
+            </div>
+            <div id="sidebarContent"></div>
+            
+            <h3 style="color:#66c0f4;margin:32px 0 12px;font-size:18px;">Recommended for you</h3>
+            <div id="recommendedSidebar" class="recommended-grid"></div>
+        </div>
+    </div>
+
+    <footer>
+        Demonstration prototype of Steam homepage redesign.<br>
+        All links and elements are non-functional — made solely for demonstration purposes.<br>
+        Data and images are used only as a demonstration example.<br>
+        Copyright LOLOLOL. You can do whatever you want with the layout and take me on the team.
+    </footer>
+
+    <script>
+        let gameData = [];
+        function generateGameData() {
+            gameData = [];
+            const bases = [
+                { title: "Half-Life", img: "../sources/hl.jpg", deck: "verified", proton: "gold", price: 9.99 },
+                { title: "Half-Life 2", img: "../sources/hl2.jpg", deck: "playable", proton: "platinum", price: 14.99 },
+                { title: "Counter-Strike 2", img: "../sources/cs2.jpg", deck: "unsupported", proton: "silver", price: 0 },
+                { title: "Portal 2", img: "../sources/p2.jpg", deck: "verified", proton: "platinum", price: 19.99 },
+                { title: "Team Fortress 2", img: "../sources/tf2.jpg", deck: "playable", proton: "gold", price: 0 },
+                { title: "Left 4 Dead 2", img: "../sources/l4d2.jpg", deck: "verified", proton: "platinum", price: 9.99 }
+            ];
+            for (let i = 0; i < 12; i++) {
+                const base = bases[i % bases.length];
+                gameData.push({ ...base });
+            }
+            for (let i = 0; i < 6; i++) {
+                gameData.push({
+                    title: `Placeholder ${i + 1}`,
+                    img: "../sources/logo_steam.svg",
+                    deck: "playable",
+                    proton: "silver",
+                    price: 4.99
+                });
+            }
+        }
+        function shuffleArray(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+        const sidebarNewReleases = [
+            { img: "../sources/hl.jpg", title: "Half-Life", price: 9.99 },
+            { img: "../sources/hl2.jpg", title: "Half-Life 2", price: 14.99 },
+            { img: "../sources/cs2.jpg", title: "Counter-Strike 2", price: 0 },
+            { img: "../sources/p2.jpg", title: "Portal 2", price: 19.99 }
+        ];
+        const sidebarTopSellers = [
+            { img: "../sources/l4d2.jpg", title: "Left 4 Dead 2", price: 9.99 },
+            { img: "../sources/tf2.jpg", title: "Team Fortress 2", price: 0 },
+            { img: "../sources/hl2.jpg", title: "Half-Life 2", price: 14.99 },
+            { img: "../sources/hl.jpg", title: "Half-Life", price: 9.99 }
+        ];
+        const sidebarUpcoming = [
+            { img: "../sources/hl3.jpg", title: "Half-Life 3", price: "TBA" },
+            { img: "../sources/tf3.jpg", title: "Team Fortress 3", price: "TBA" },
+            { img: "../sources/l4d3.jpg", title: "Left 4 Dead 3", price: "TBA" },
+            { img: "../sources/p3.jpg", title: "Portal 3", price: "TBA" }
+        ];
+        const recommendedGames = [
+            { img: "../sources/hl2.jpg", title: "Half-Life 2" },
+            { img: "../sources/p2.jpg", title: "Portal 2" },
+            { img: "../sources/l4d2.jpg", title: "Left 4 Dead 2" },
+            { img: "../sources/cs2.jpg", title: "Counter-Strike 2" }
+        ];
+        const carouselItems = [
+            { title: "Half-Life: Alyx", desc: "Step into the world of Half-Life like never before. The definitive VR experience.", img: "../sources/hla.jpg" },
+            { title: "Counter-Strike 2", desc: "The next evolution of the classic multiplayer shooter.", img: "../sources/cs2.jpg" },
+            { title: "Portal 2", desc: "The acclaimed puzzle-platformer that redefined the genre.", img: "../sources/p2.jpg" },
+            { title: "Team Fortress 2", desc: "Classic team-based multiplayer action.", img: "../sources/tf2.jpg" },
+            { title: "Half-Life 3", desc: "Soon... maybe.", img: "../sources/hl3.jpg" }
+        ];
+        let currentIndex = 0;
+        let carouselInterval = null;
+        function renderCarousel() {
+            if (carouselInterval) clearInterval(carouselInterval);
+            const item = carouselItems[currentIndex];
+            document.getElementById('carouselMainImage').src = item.img;
+            document.getElementById('carouselTitle').textContent = item.title;
+            document.getElementById('carouselDesc').textContent = item.desc;
+            let screenshotsHtml = '';
+            for (let i = 0; i < 4; i++) screenshotsHtml += `<img src="${item.img}" alt="screenshot">`;
+            document.getElementById('carouselScreenshots').innerHTML = screenshotsHtml;
+            let dotsHTML = '';
+            for (let i = 0; i < carouselItems.length; i++) {
+                dotsHTML += `<div class="dot ${i === currentIndex ? 'active' : ''}" onclick="goToCarousel(${i})"></div>`;
+            }
+            document.getElementById('carouselDots').innerHTML = dotsHTML;
+            carouselInterval = setInterval(() => nextCarousel(), 5000);
+        }
+        function nextCarousel() { currentIndex = (currentIndex + 1) % carouselItems.length; renderCarousel(); }
+        function prevCarousel() { currentIndex = (currentIndex - 1 + carouselItems.length) % carouselItems.length; renderCarousel(); }
+        function goToCarousel(i) { currentIndex = i; renderCarousel(); }
+        function renderGames() {
+            const grid = document.getElementById('gamesGrid');
+            const shuffledGames = shuffleArray([...gameData]);
+            grid.innerHTML = shuffledGames.map((game, idx) => `
+                <div class="game-card">
+                    <img src="${game.img}" alt="${game.title}">
+                    <div class="game-popup">
+                        <div class="popup-header"><h3>${game.title}</h3><p>Release date: 22 Mar 2024</p></div>
+                        <img src="${game.img}" class="popup-image" alt="">
+                        <div class="popup-info">
+                            <div class="popup-reviews">All user reviews: Overwhelmingly Positive (4,330)</div>
+                            <div class="compatibility">
+                                <div class="badge deck-${game.deck}"><span>${getDeckLabel(game.deck)}</span></div>
+                                <div class="badge proton-${game.proton}"><span>ProtonDB: ${getProtonLabel(game.proton)}</span></div>
+                            </div>
+                            <div class="popup-tags" style="margin-top:10px;"><span>Co-op</span><span>Physics</span><span>Simulator</span></div>
+                        </div>
+                    </div>
+                    <div class="game-meta">
+                        <div class="game-title">${game.title}</div>
+                        <div class="game-price">${game.price === 0 ? 'Free' : '$' + game.price.toFixed(2)}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        function renderOffers() {
+            const grid = document.getElementById('offersGrid');
+            const shuffledGames = shuffleArray([...gameData]);
+            const offers = shuffledGames.slice(0, 8).map(g => ({ ...g, price: g.price * 0.8 }));
+            grid.innerHTML = offers.map((game, idx) => `
+                <div class="game-card">
+                    <img src="${game.img}" alt="${game.title}">
+                    <div class="game-popup">
+                        <div class="popup-header"><h3>${game.title}</h3><p>Special Offer • Limited time</p></div>
+                        <img src="${game.img}" class="popup-image" alt="">
+                        <div class="popup-info">
+                            <div class="popup-reviews">All user reviews: Very Positive</div>
+                            <div class="compatibility">
+                                <div class="badge deck-${game.deck}"><span>${getDeckLabel(game.deck)}</span></div>
+                                <div class="badge proton-${game.proton}"><span>ProtonDB: ${getProtonLabel(game.proton)}</span></div>
+                            </div>
+                            <div class="popup-tags"><span>Action</span><span>Multiplayer</span></div>
+                        </div>
+                    </div>
+                    <div class="game-meta">
+                        <div class="game-title">${game.title}</div>
+                        <div class="game-price">${game.price === 0 ? 'Free' : '$' + game.price.toFixed(2)}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        let activeTabIndex = 0;
+        function switchTab(n) {
+            activeTabIndex = n;
+            document.querySelectorAll('.tab').forEach((el, i) => {
+                el.style.background = i === n ? '#66c0f4' : 'transparent';
+                el.style.color = i === n ? '#000' : '#c6d4df';
+            });
+            renderSidebarContent();
+        }
+        function renderSidebarContent() {
+            const container = document.getElementById('sidebarContent');
+            let items = [];
+            if (activeTabIndex === 0) items = sidebarNewReleases;
+            else if (activeTabIndex === 1) items = sidebarTopSellers;
+            else items = sidebarUpcoming;
+            container.innerHTML = items.map(item => `
+                <div style="display:flex;gap:12px;margin-bottom:14px;">
+                    <img src="${item.img}" style="width:120px;height:68px;object-fit:cover;border-radius:6px;">
+                    <div>
+                        <div style="font-size:15px;">${item.title}</div>
+                        <div style="color:#66c0f4;">${typeof item.price === 'number' ? (item.price === 0 ? 'Free' : '$' + item.price.toFixed(2)) : item.price}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        function renderRecommendedSidebar() {
+            const container = document.getElementById('recommendedSidebar');
+            container.innerHTML = recommendedGames.map(game => `
+                <div class="rec-item">
+                    <img src="${game.img}" alt="${game.title}">
+                    <div style="font-size:14px;">${game.title}</div>
+                </div>
+            `).join('');
+        }
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const icon = document.querySelector('.valve-icon');
+            sidebar.classList.toggle('show');
+            if (icon) icon.classList.toggle('rotate');
+        }
+        function getDeckLabel(status) {
+            switch(status) {
+                case "verified": return "Steam Deck Verified";
+                case "playable": return "Playable (needs tweaks)";
+                case "unsupported": return "Unsupported";
+                default: return "Unknown";
+            }
+        }
+        function getProtonLabel(status) {
+            switch(status) {
+                case "platinum": return "Platinum (runs perfectly)";
+                case "gold": return "Gold (runs well)";
+                case "silver": return "Silver (minor issues)";
+                case "bronze": return "Bronze (needs fixes)";
+                default: return "Unknown";
+            }
+        }
+        window.onload = () => {
+            generateGameData();
+            renderCarousel();
+            renderGames();
+            renderOffers();
+            renderSidebarContent();
+            renderRecommendedSidebar();
+        };
+    </script>
+</body>
+</html>

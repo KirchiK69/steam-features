@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Half-Life 2 on Steam</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Arial:wght@400;500;700&display=swap');
+        
+        :root {
+            --steam-dark: #171a21;
+            --steam-header: #1b2838;
+            --steam-blue: #66c0f4;
+            --steam-text: #c6d4df;
+        }
+        
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: "Arial", sans-serif;
+            background: linear-gradient(180deg, #1b2838 0%, #171a21 100%);
+            color: #fff;
+            line-height: 1.4;
+            min-height: 100vh;
+            font-size: 16px;
+        }
+        
+        /* Header */
+        header {
+            background: #171a21;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .logo img { height: 38px; width: auto; }
+        nav a {
+            color: #c6d4df;
+            text-decoration: none;
+            margin: 0 14px;
+            font-weight: 500;
+            transition: color 0.2s;
+            font-size: 17px;
+        }
+        nav a:hover { color: #fff; }
+        
+        /* Valve icon (mobile) */
+        .valve-icon {
+            display: none;
+            width: 36px;
+            height: 36px;
+            cursor: pointer;
+            margin-left: auto;
+            transition: transform 0.3s ease;
+        }
+        .valve-icon svg {
+            width: 100%;
+            height: 100%;
+        }
+        .valve-icon.rotate {
+            transform: rotate(90deg);
+        }
+        
+        /* Badges */
+        .compatibility {
+            margin-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-weight: 500;
+        }
+        .deck-verified { background: #1a9fff; }
+        .deck-playable { background: #66c0f4; color: #000; }
+        .deck-unsupported { background: #a34c25; }
+        .content-badge {
+            background: #66c0f4;
+            color: #000;
+        }
+        
+        /* Upper section – precise grid layout */
+        .upper-grid {
+            display: grid;
+            grid-template-columns: 10% 50% 5% 25% 10%;
+            gap: 0;
+            margin-bottom: 60px;
+        }
+        
+        /* Main content column (second column) */
+        .main-content {
+            grid-column: 2 / 3;
+            min-width: 0;
+        }
+        
+        /* Sidebar column (fourth column) */
+        .right-sidebar {
+            grid-column: 4 / 5;
+            position: sticky;
+            top: 80px;      /* stick within upper section */
+            align-self: start;
+        }
+        
+        /* Breadcrumbs */
+        .breadcrumbs {
+            font-size: 13px;
+            margin-bottom: 20px;
+            color: #8f8f8f;
+        }
+        .breadcrumbs a {
+            color: #66c0f4;
+            text-decoration: none;
+        }
+        .breadcrumbs a:hover { text-decoration: underline; }
+        
+        /* Game title area */
+        .game_title_area {
+            margin-bottom: 20px;
+        }
+        .game_title_area h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        .game_description_snippet {
+            color: #c6d4df;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        
+        /* Carousel – with main image and thumbnails */
+        .featured-carousel {
+            margin-bottom: 48px;
+            position: relative;
+        }
+        .main-image-container {
+            position: relative;
+            border-radius: 4px;
+            background: #000;
+            aspect-ratio: 16 / 9;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+        .main-image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .carousel-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.75);
+            color: #fff;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            cursor: pointer;
+            z-index: 20;
+            transition: background 0.2s;
+        }
+        .carousel-arrow:hover {
+            background: rgba(0,0,0,0.9);
+        }
+        .carousel-arrow.left {
+            left: 16px;
+        }
+        .carousel-arrow.right {
+            right: 16px;
+        }
+        /* Thumbnails row */
+        .thumbnails {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+        .thumbnail {
+            width: 100px;
+            flex-shrink: 0;
+            aspect-ratio: 16 / 9;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s, transform 0.2s;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .thumbnail.active {
+            opacity: 1;
+            transform: scale(1.02);
+            box-shadow: 0 0 0 2px #66c0f4;
+        }
+        .thumbnail:hover {
+            opacity: 1;
+        }
+        
+        /* Purchase box */
+        .game_area_purchase {
+            background: #1b2838;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .purchase-option {
+            padding: 16px;
+            border-bottom: 1px solid #2a2a2a;
+        }
+        .purchase-option:last-child { border-bottom: none; }
+        .purchase-title {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+        .purchase-price {
+            font-size: 20px;
+            font-weight: bold;
+            color: #66c0f4;
+            margin: 8px 0;
+        }
+        .btn-green {
+            background: #5c9e3f;
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            text-align: center;
+            display: inline-block;
+            text-decoration: none;
+        }
+        .btn-green:hover { background: #4c8c32; }
+        
+        /* Game meta data (features etc.) */
+        .game_meta_data {
+            background: #1b2838;
+            border-radius: 4px;
+            padding: 16px;
+            margin-top: 20px;
+        }
+        .meta-block {
+            margin-bottom: 20px;
+        }
+        .meta-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #66c0f4;
+        }
+        .features-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        .features-list li {
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .features-list li::before {
+            content: "+";
+            color: #66c0f4;
+            font-weight: bold;
+        }
+        .controller-support {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .controller-support div {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* About section with full‑width stacked screenshots */
+        .game_area_description {
+            background: #1b2838;
+            padding: 20px;
+            border-radius: 4px;
+            margin-bottom: 30px;
+        }
+        .extra-screenshots {
+            margin-top: 20px;
+        }
+        .extra-screenshots img {
+            width: 100%;
+            border-radius: 4px;
+            aspect-ratio: 16/9;
+            object-fit: cover;
+            margin-bottom: 16px;
+        }
+        .extra-screenshots img:last-child {
+            margin-bottom: 0;
+        }
+        
+        /* System requirements */
+        .sys_req {
+            background: #1b2838;
+            padding: 20px;
+            border-radius: 4px;
+            margin-bottom: 30px;
+        }
+        
+        /* Reviews section – 80% width, centered */
+        .reviews-section {
+            width: 80%;
+            margin: 0 auto 40px;
+            background: transparent;
+        }
+        .user_reviews_header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            color: #66c0f4;
+        }
+        .nlp-summary {
+            background: #1b2838;
+            padding: 16px;
+            border-radius: 4px;
+            margin-bottom: 30px;
+        }
+        .nlp-summary h3 {
+            margin-bottom: 12px;
+        }
+        .nlp-summary p {
+            color: #c6d4df;
+        }
+        
+        /* Two-column layout for filters and reviews */
+        .reviews-layout {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+        }
+        .filters-sticky {
+            width: 280px;
+            position: sticky;
+            top: 80px;
+            background: #1b2838;
+            padding: 16px;
+            border-radius: 4px;
+        }
+        .filter-group {
+            margin-bottom: 20px;
+        }
+        .filter-group h4 {
+            margin-bottom: 8px;
+            color: #66c0f4;
+        }
+        .filter-group label {
+            display: block;
+            margin-bottom: 6px;
+            cursor: pointer;
+        }
+        .filter-group input {
+            margin-right: 8px;
+        }
+        .reviews-list {
+            flex: 1;
+        }
+        
+        /* Review cards (three‑column layout) */
+        .review-card {
+            background: #1b2838;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+            padding: 16px;
+        }
+        .review-left {
+            width: 140px;
+            flex-shrink: 0;
+        }
+        .review-avatar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .avatar-placeholder {
+            width: 40px;
+            height: 40px;
+            background: #2a2a2a;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        .review-nickname {
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .hardware-info {
+            font-size: 12px;
+            background: #0e1a24;
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+        .hardware-info summary {
+            padding: 8px;
+            font-weight: bold;
+            color: #66c0f4;
+            cursor: pointer;
+        }
+        .hardware-details {
+            padding: 8px;
+            border-top: 1px solid #2a2a2a;
+            color: #8f8f8f;
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+        .hardware-details code {
+            display: block;
+            background: #000;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 11px;
+            margin-top: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .review-center {
+            flex: 1;
+            min-width: 0;
+        }
+        .review-header-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .recommended-badge {
+            background: #5c9e3f;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .playtime {
+            font-size: 12px;
+            color: #8f8f8f;
+        }
+        .review-text {
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+        .special-marks {
+            display: flex;
+            gap: 16px;
+            margin-top: 12px;
+            font-size: 13px;
+            color: #8f8f8f;
+            border-top: 1px solid #2a2a2a;
+            padding-top: 12px;
+        }
+        .mark {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .mark.like { color: #5c9e3f; }
+        .mark.dislike { color: #a34c25; }
+        .review-right {
+            width: 280px;
+            flex-shrink: 0;
+            background: #2a2a2a;
+            border-radius: 4px;
+            padding: 12px;
+            border-left: 3px solid #66c0f4;
+        }
+        .dev-response-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #66c0f4;
+        }
+        .dev-response-text {
+            font-size: 13px;
+            line-height: 1.4;
+        }
+        
+        @media (max-width: 1079px) {
+            .upper-grid {
+                display: flex;
+                flex-direction: column;
+                padding: 0 20px;
+            }
+            .right-sidebar {
+                position: static;
+                width: 100%;
+                margin-top: 30px;
+            }
+            .reviews-section {
+                width: 90%;
+            }
+            .reviews-layout {
+                flex-direction: column;
+            }
+            .filters-sticky {
+                width: 100%;
+                position: static;
+                margin-bottom: 20px;
+            }
+            .review-card {
+                flex-direction: column;
+            }
+            .review-left, .review-right {
+                width: 100%;
+            }
+            .valve-icon { display: block; }
+        }
+        
+        footer { 
+            text-align: center; 
+            padding: 60px 20px 40px; 
+            color: #8f8f8f; 
+            font-size: 14px; 
+            border-top: 1px solid #2a2a2a;
+            margin-top: 80px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <img src="../sources/logo_steam.svg" alt="STEAM">
+        </div>
+        <nav style="margin-left: auto;">
+            <a href="#">Store</a>
+            <a href="#">Community</a>
+            <a href="#">About</a>
+            <a href="#">Support</a>
+        </nav>
+        <div class="valve-icon" onclick="toggleSidebar()">
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="40" fill="#e33c2c" stroke="#a52214" stroke-width="2"/>
+                <rect x="48" y="15" width="4" height="30" fill="#c0c0c0" rx="2"/>
+                <rect x="48" y="55" width="4" height="30" fill="#c0c0c0" rx="2"/>
+                <rect x="15" y="48" width="30" height="4" fill="#c0c0c0" rx="2"/>
+                <rect x="55" y="48" width="30" height="4" fill="#c0c0c0" rx="2"/>
+                <circle cx="50" cy="50" r="12" fill="#2a2a2a"/>
+            </svg>
+        </div>
+    </header>
+
+    <!-- Upper part: precise grid layout with sticky sidebar -->
+    <div class="upper-grid">
+        <!-- Main content (second column) -->
+        <div class="main-content">
+            <!-- Breadcrumbs -->
+            <div class="breadcrumbs">
+                <a href="#">All Games</a> &gt; <a href="#">Action</a> &gt; <a href="#">Half-Life Franchise</a> &gt; Half-Life 2
+            </div>
+
+            <!-- Carousel with main image, arrows, and 5 thumbnails -->
+            <div class="featured-carousel">
+                <div class="main-image-container">
+                    <img id="carouselMainImage" src="../sources/hla.jpg" alt="Half-Life 2">
+                    <div class="carousel-arrow left" onclick="prevCarousel()">‹</div>
+                    <div class="carousel-arrow right" onclick="nextCarousel()">›</div>
+                </div>
+                <div class="thumbnails" id="thumbnailsContainer"></div>
+            </div>
+
+            <div class="page_top_area">
+                <div class="game_title_area">
+                    <h1>Half-Life 2</h1>
+                    <div class="game_description_snippet">
+                        Gordon Freeman awakens in City 17 and leads a desperate resistance against the Combine. The definitive first-person shooter with unparalleled physics and immersive combat.
+                    </div>
+                </div>
+            </div>
+
+            <!-- About section with full‑width stacked screenshots -->
+            <div class="game_area_description">
+                <h2>About This Game</h2>
+                <p>Half-Life 2 is a landmark first-person shooter that set the standard for narrative-driven action. Featuring groundbreaking physics, intelligent enemies, and a gripping story, it remains a masterpiece over two decades later.</p>
+                <p>The game includes the episodic expansions Episode One and Episode Two, continuing the story beyond the main campaign.</p>
+                <div class="extra-screenshots">
+                    <img src="../sources/hl2.jpg" alt="Screenshot 1">
+                    <img src="../sources/hl2.jpg" alt="Screenshot 2">
+                </div>
+            </div>
+
+            <!-- System requirements -->
+            <div class="sys_req">
+                <h2>System Requirements</h2>
+                <ul>
+                    <li><strong>OS:</strong> Windows 7, Vista, XP</li>
+                    <li><strong>Processor:</strong> 1.7 GHz</li>
+                    <li><strong>Memory:</strong> 512 MB RAM</li>
+                    <li><strong>Graphics:</strong> DirectX 8.1 compatible GPU with SSE support</li>
+                    <li><strong>Storage:</strong> 6500 MB available space</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Right sidebar (fourth column, sticky) -->
+        <div class="right-sidebar">
+            <div class="game_area_purchase">
+                <div class="purchase-option">
+                    <div class="purchase-title">Buy Half-Life 2</div>
+                    <div class="purchase-price">$9.99</div>
+                    <a href="#" class="btn-green">Add to Cart</a>
+                </div>
+                <div class="purchase-option">
+                    <div class="purchase-title">Buy The Orange Box</div>
+                    <div class="purchase-price">$19.99</div>
+                    <a href="#" class="btn-green">Add to Cart</a>
+                </div>
+                <div class="purchase-option">
+                    <div class="purchase-title">Buy Half-Life Complete</div>
+                    <div class="purchase-price">$27.99</div>
+                    <a href="#" class="btn-green">Add to Cart</a>
+                </div>
+            </div>
+
+            <div class="game_meta_data">
+                <div class="meta-block">
+                    <div class="meta-title">Features</div>
+                    <ul class="features-list">
+                        <li>Single-player</li>
+                        <li>Steam Achievements</li>
+                        <li>Steam Trading Cards</li>
+                        <li>Closed Captions</li>
+                        <li>Steam Workshop</li>
+                        <li>Steam Cloud</li>
+                        <li>Source SDK Tools</li>
+                        <li>Commentary Support</li>
+                        <li>Remote Play on Phone</li>
+                        <li>Remote Play on Tablet</li>
+                        <li>Remote Play Together</li>
+                        <li>Family Sharing</li>
+                        <li>Steam Timeline</li>
+                        <li>Accessibility Features (8)</li>
+                    </ul>
+                </div>
+                <div class="meta-block">
+                    <div class="meta-title">Full Controller Support</div>
+                    <div class="controller-support">
+                        <div>+ Xbox Controllers</div>
+                        <div>+ PlayStation Controllers</div>
+                        <div>+ Steam Input API</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reviews section – 80% width, centered, outside the sticky area -->
+    <div class="reviews-section">
+        <div class="user_reviews_header">
+            <h2>User Reviews: Half-Life 2</h2>
+            <span>64,987 reviews</span>
+        </div>
+        
+        <div class="nlp-summary">
+            <h3>Most frequently mentioned by users:</h3>
+            <p>Excellent gunplay • Outstanding physics implementation • Looks amazing even today • Waiting for the third part</p>
+        </div>
+
+        <div class="reviews-layout">
+            <div class="filters-sticky">
+                <div class="filter-group">
+                    <h4>Rating</h4>
+                    <label><input type="radio" name="rating" checked> All</label>
+                    <label><input type="radio" name="rating"> Positive</label>
+                    <label><input type="radio" name="rating"> Negative</label>
+                </div>
+                <div class="filter-group">
+                    <h4>Language</h4>
+                    <label><input type="radio" name="lang" checked> All languages</label>
+                    <label><input type="radio" name="lang"> English</label>
+                    <label><input type="radio" name="lang"> Russian</label>
+                </div>
+                <div class="filter-group">
+                    <h4>Period</h4>
+                    <label><input type="radio" name="period" checked> All time</label>
+                    <label><input type="radio" name="period"> Last 30 days</label>
+                    <label><input type="radio" name="period"> Last 90 days</label>
+                </div>
+                <div class="filter-group">
+                    <h4>Playtime at review</h4>
+                    <label><input type="radio" name="playtime" checked> Any</label>
+                    <label><input type="radio" name="playtime"> > 1 hour</label>
+                    <label><input type="radio" name="playtime"> > 10 hours</label>
+                </div>
+                <div class="filter-group">
+                    <h4>Display</h4>
+                    <label><input type="radio" name="display" checked> Recent</label>
+                    <label><input type="radio" name="display"> Most helpful</label>
+                    <label><input type="radio" name="display"> Funny</label>
+                    <label><input type="radio" name="display"> Latest</label>
+                </div>
+            </div>
+
+            <div class="reviews-list" id="reviewsList">
+                <!-- 10 reviews will be inserted here by JS -->
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        Demonstration prototype of Steam homepage redesign.<br>
+        All links and elements are non-functional — made solely for demonstration purposes.<br>
+        Data and images are used only as a demonstration example.<br>
+        Copyright LOLOLOL. You can do whatever you want with the layout and take me on the team.
+    </footer>
+
+    <script>
+        // Carousel data – 5 items
+        const carouselItems = [
+            { img: "../sources/hla.jpg", title: "Half-Life: Alyx" },
+            { img: "../sources/hl2.jpg", title: "Half-Life 2" },
+            { img: "../sources/cs2.jpg", title: "Counter-Strike 2" },
+            { img: "../sources/p2.jpg", title: "Portal 2" },
+            { img: "../sources/tf2.jpg", title: "Team Fortress 2" }
+        ];
+        let currentIndex = 0;
+
+        function renderCarousel() {
+            const mainImg = document.getElementById('carouselMainImage');
+            mainImg.src = carouselItems[currentIndex].img;
+            mainImg.alt = carouselItems[currentIndex].title;
+
+            // Generate thumbnails
+            const thumbnailsContainer = document.getElementById('thumbnailsContainer');
+            thumbnailsContainer.innerHTML = carouselItems.map((item, idx) => `
+                <div class="thumbnail ${idx === currentIndex ? 'active' : ''}" onclick="goToCarousel(${idx})">
+                    <img src="${item.img}" alt="${item.title}">
+                </div>
+            `).join('');
+        }
+
+        function nextCarousel() {
+            currentIndex = (currentIndex + 1) % carouselItems.length;
+            renderCarousel();
+        }
+
+        function prevCarousel() {
+            currentIndex = (currentIndex - 1 + carouselItems.length) % carouselItems.length;
+            renderCarousel();
+        }
+
+        function goToCarousel(index) {
+            currentIndex = index;
+            renderCarousel();
+        }
+
+        function toggleSidebar() {
+            const icon = document.querySelector('.valve-icon');
+            if (icon) icon.classList.toggle('rotate');
+        }
+
+        // Generate 10 placeholder reviews
+        const placeholderReviews = Array(10).fill().map((_, i) => ({
+            nickname: `User_${i+1}`,
+            playtime: `${Math.floor(Math.random() * 100)} hrs on record`,
+            text: "This is a placeholder review. The game is absolutely fantastic! Great story, amazing physics, and it still holds up today. Highly recommended for any FPS fan.",
+            liked: true,
+            lighting: true,
+            devResponse: "Thanks for your support! We're glad you enjoyed the experience."
+        }));
+
+        function renderReviews() {
+            const container = document.getElementById('reviewsList');
+            container.innerHTML = placeholderReviews.map(review => `
+                <div class="review-card">
+                    <div class="review-left">
+                        <div class="review-avatar">
+                            <div class="avatar-placeholder">👤</div>
+                            <div class="review-nickname">${review.nickname}</div>
+                        </div>
+                        <details class="hardware-info">
+                            <summary>Technical details</summary>
+                            <div class="hardware-details">
+                                <strong>PC:</strong> Intel i7-10700K, RTX 3070, 32GB RAM<br>
+                                <strong>Steam Deck:</strong> Not tested<br>
+                                <strong>Proton version:</strong> Experimental (GE-Proton8-25)<br>
+                                <strong>Launch options:</strong>
+                                <code>PROTON_USE_WINED3D=1 %command% --very-long-option-that-should-wrap-properly</code>
+                            </div>
+                        </details>
+                    </div>
+                    <div class="review-center">
+                        <div class="review-header-meta">
+                            <span class="recommended-badge">Recommended</span>
+                            <span class="playtime">${review.playtime}</span>
+                        </div>
+                        <div class="review-text">${review.text}</div>
+                        <div class="special-marks">
+                            <span class="mark like">Liked</span>
+                            ${review.lighting ? '<span class="mark">Lighting comment</span>' : ''}
+                        </div>
+                    </div>
+                    <div class="review-right">
+                        <div class="dev-response-title">Developer response (Valve)</div>
+                        <div class="dev-response-text">${review.devResponse}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.onload = () => {
+            renderCarousel();
+            renderReviews();
+        };
+    </script>
+</body>
+</html>
