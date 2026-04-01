@@ -61,6 +61,10 @@ UI prototypes for selected ideas:
 ![Compatibility window](assets/prototype3.png)
 *First‑launch dialog with privacy controls and data collection simulation.*
 
+### 4. Steam logs — centralized diagnostics and resolver
+
+Soon.
+
 ## Approach
 
 These proposals are based on the following principles:
